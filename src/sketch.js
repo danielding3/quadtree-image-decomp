@@ -28,7 +28,7 @@ window.fileInput = null;
 
 
 function preload() {
-  window.img = loadImage('/src/assets/flower.png');
+  window.img = loadImage('/assets/flower.png');
 }
 
 function setup() {
@@ -39,7 +39,7 @@ function setup() {
   window.fileInput = createFileInput(window.handleFile);
   window.fileInput.hide(); // Trigger it via Tweakpane
   
-  loadImage('./src/assets/flower.png', (loadedImg) => {
+  loadImage('/assets/flower.png', (loadedImg) => {
     window.processNewImage(loadedImg);
     print('Image Dimensions: [', window.img.width, window.img.height, ']')
   });

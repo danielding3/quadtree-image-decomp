@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   // Change this to your subdirectory path (e.g., '/quadtree/' or '/projects/quadtree/')
-  base: '/quadtree/',
+  base: '/',
   
   build: {
     // Output directory (default is 'dist')
