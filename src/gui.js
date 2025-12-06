@@ -1,4 +1,5 @@
 import {Pane} from 'tweakpane';
+import {basePics} from './basePics.js';
 
 function handleFile(file) {
   if (file.type === 'image') {
@@ -42,9 +43,31 @@ function setupGUI() {
   let pane = new Pane({
     container: document.getElementById('someContainer'),
   });
-  // Image upload
-  const btn = pane.addButton({title: 'Upload New Decomposition Image'});
 
+  // Build dropdown options from basePics array
+  const picOptions = {};
+  basePics.forEach(pic => {
+    picOptions[pic.name] = pic.src;
+  });
+
+  // Add base image dropdown
+  window.params.selectedPic = basePics[0].src; // default to first pic
+  const picSelector = pane.addBinding(window.params, 'selectedPic', {
+    label: 'Base Image',
+    options: picOptions,
+  });
+
+  picSelector.on('change', (ev) => {
+    console.log('Loading new base image:', ev.value);
+    loadImage(ev.value, (loadedImg) => {
+      processNewImage(loadedImg);
+    });
+  });
+
+  pane.addBlade({ view: "separator" });
+
+  // Image upload
+  const btn = pane.addButton({title: 'Upload Custom Image'});
 
   btn.on('click', () => {
     window.fileInput.elt.click(); // click on the actual HTMl element
