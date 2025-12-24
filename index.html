@@ -7,9 +7,26 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>30d-quadtree-image-decomp</title>
+    <title>Quadtree Image Decomposition</title>
   </head>
   <body>
+    <!-- Zoom Widget -->
+    <div id="zoom-widget" class="zoom-widget roboto-mono-normal">
+      <button id="zoom-minus" class="zoom-btn zoom-btn-minus" aria-label="Zoom out">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <line x1="6" y1="12" x2="18" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <span id="zoom-display" class="zoom-display">100%</span>
+      <input id="zoom-input" type="number" class="zoom-input hidden" min="10" max="500" step="10" />
+      <button id="zoom-plus" class="zoom-btn zoom-btn-plus" aria-label="Zoom in">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <line x1="12" y1="6" x2="12" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <line x1="6" y1="12" x2="18" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+
     <div class="tile-panel-wrapper roboto-mono-normal">
       <div class="tile-panel">
         Tile Panel

@@ -151,6 +151,111 @@ input::-webkit-inner-spin-button {
 
 
 
+/* ========================================
+   Zoom Widget Styles
+   ======================================== */
+.zoom-widget {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  
+  background-color: var(--gui-bg-color);
+  padding: 0.375rem 0.625rem;
+  border-radius: 1rem;
+  
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.zoom-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  width: 2rem;
+  height: 2rem;
+  
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  
+  color: var(--gui-text-label-color);
+  transition: all 0.15s ease-out;
+}
+
+.zoom-btn-minus {
+  background-color: var(--gui-fg-color);
+}
+
+.zoom-btn-plus {
+  background-color: var(--gui-fg-color);
+}
+
+.zoom-btn:hover {
+  color: var(--gui-btn-color-hover);
+  background-color: #3a3b42;
+}
+
+.zoom-btn:active {
+  color: var(--gui-btn-color-active);
+  transform: scale(0.95);
+}
+
+.zoom-btn svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.zoom-display {
+  min-width: 2rem;
+  text-align: center;
+  
+  font-size: 1rem;
+  color: var(--gui-text-label-color);
+  
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  transition: all 0.15s ease-out;
+}
+
+.zoom-display:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--gui-btn-color-hover);
+}
+
+.zoom-input {
+  width: 2rem;
+  padding: 0.5rem;
+  
+  font-family: inherit;
+  font-size: 1rem;
+  text-align: center;
+  
+  background-color: var(--gui-fg-color);
+  color: var(--gui-text-label-color);
+  border: none;
+  border-radius: 0.5rem;
+  
+  outline: none;
+}
+
+.zoom-input:focus {
+  box-shadow: inset 0 0 0 1px white;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ========================================
+   Base Styles
+   ======================================== */
 html, body {
   height:100%;
   margin: 0;

@@ -52,13 +52,13 @@ export const tilePacks = [
     id: 'crt',
     name: 'CRT',
     tiles: [
-      { src: '/assets/crt/crt-1.png', stop: 0 },
-      { src: '/assets/crt/crt-2.png', stop: 25 },
-      { src: '/assets/crt/crt-3.png', stop: 40 },
-      { src: '/assets/crt/crt-4.png', stop: 50 },
-      { src: '/assets/crt/crt-5.png', stop: 70 },
-      { src: '/assets/crt/crt-6.png', stop: 80 },
-      { src: '/assets/crt/crt-7.png', stop: 90 },
+      { src: '/assets/crt/CRT-1.png', stop: 0 },
+      { src: '/assets/crt/CRT-2.png', stop: 25 },
+      { src: '/assets/crt/CRT-3.png', stop: 40 },
+      { src: '/assets/crt/CRT-4.png', stop: 50 },
+      { src: '/assets/crt/CRT-5.png', stop: 70 },
+      { src: '/assets/crt/CRT-6.png', stop: 80 },
+      { src: '/assets/crt/CRT-7.png', stop: 90 },
     ]
   },
   {
