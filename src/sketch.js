@@ -233,21 +233,25 @@ function drawNodes() {
 
 // Tile loading functions
 async function loadTiles () {
+  // wait for persisted custom tiles to be restored before reading activePack
+  if (window.tilesRestoreReady) await window.tilesRestoreReady;
+
   // First get active pack
   if (!window.activePack) return;
   const activePack = window.activePack;
 
-  // Then load each tile for p5js
+  // Then load each tile for p5js. resolve null on failure so one bad tile
+  // doesn't blank the whole render.
   const loadPromises = activePack.tiles.map((tile) => {
-    return new Promise((resolve, reject) => {
-      loadImage(tile.src, 
-        (img) => resolve({ img, stop: tile.stop, src: tile.src }), // callback for success. src is used as an identifier
-        (err) => reject(err)
+    return new Promise((resolve) => {
+      loadImage(tile.src,
+        (img) => resolve({ img, stop: tile.stop, src: tile.src }), // src is used as an identifier
+        () => resolve(null)
       )
     })
   })
   // Waits for images to load
-  loadedTiles = await Promise.all(loadPromises)
+  loadedTiles = (await Promise.all(loadPromises)).filter(Boolean)
 
   console.log(`Loaded ${loadedTiles.length} tiles from the pack`);
 
