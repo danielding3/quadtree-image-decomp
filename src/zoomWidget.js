@@ -74,7 +74,7 @@ function initZoomWidget() {
   function setZoom(value) {
     window.params.zoom = value;
     updateZoomDisplay();
-    window.needsUpdate = true;
+    // zoom only affects the draw transform, no quadtree rebuild needed
     redraw();
   }
 
