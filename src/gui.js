@@ -38,6 +38,15 @@ function darken(c, factor = 0.5) {
 }
 
 
+function requestRebuild() {
+  window.needsUpdate = true;
+  redraw();
+}
+
+function requestRedraw() {
+  redraw();
+}
+
 // GUI
 function setupGUI() {
   let pane = new Pane({
@@ -77,26 +86,36 @@ function setupGUI() {
     title: 'Settings',
   });
 
-  f2.addBinding(window.params, "threshold", {min: 20, max: 255, step: 10, label: 'Subdivide'})
+  const subdivideBinding = f2.addBinding(window.params, "threshold", {min: 20, max: 255, step: 10, label: 'Subdivide'})
   // f2.addBinding(window.params, "imgThresh1", {min: 20, max: 255, step: 10})
   // f2.addBinding(window.params, "imgThresh2", {min: 20, max: 255, step: 10})
   // f2.addBinding(window.params, "imgThresh3", {min: 20, max: 255, step: 10})
   // f2.addBinding(window.params,  "imgThresh4", {min: 20, max: 255, step: 10})
-  
-  
-  f2.addBinding(window.params, "minSize", {min: 2, max: 24, step: 1, label: 'Min Size'});
-  f2.addBinding(window.params, "culling", {min: 0, max: 255, step: 1, label: 'Culling'});
+
+
+  const minSizeBinding = f2.addBinding(window.params, "minSize", {min: 2, max: 24, step: 1, label: 'Min Size'});
+  const cullingBinding = f2.addBinding(window.params, "culling", {min: 0, max: 255, step: 1, label: 'Culling'});
 
   f2.addBlade({ view: "separator" });
-  f2.addBinding(window.params, "bgColor");
+  const bgColorBinding = f2.addBinding(window.params, "bgColor");
+  const showImagesBinding = f2.addBinding(window.params, "showImages", {label: 'Show Images'});
+  const showBordersBinding = f2.addBinding(window.params, "showBorders", {label: 'Show Borders'});
+  const borderColorBinding = f2.addBinding(window.params, "borderColor", {label: 'Border Color'});
+  borderColorBinding.hidden = !window.params.showBorders; // only show when borders are on
   // f2.addBinding(window.params, "mainColor");
   f2.addBlade({ view: "separator" });
 
-  f2.on('change', () => {
-    window.needsUpdate = true; 
-    print('Updating quadtree')
-    redraw(); //Manually trigger redraw
-  })
+  // culling/bgColor are render-only, so they skip the rebuild
+  subdivideBinding.on('change', requestRebuild);
+  minSizeBinding.on('change', requestRebuild);
+  cullingBinding.on('change', requestRedraw);
+  bgColorBinding.on('change', requestRedraw);
+  showImagesBinding.on('change', requestRedraw);
+  showBordersBinding.on('change', (ev) => {
+    borderColorBinding.hidden = !ev.value; // reveal border color only when borders are on
+    requestRedraw();
+  });
+  borderColorBinding.on('change', requestRedraw);
   f2.addBlade({ view: "separator" });
   
 

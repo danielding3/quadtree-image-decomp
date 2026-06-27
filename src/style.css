@@ -147,6 +147,47 @@ input::-webkit-inner-spin-button {
   border-radius: 0.5rem;
 }
 
+.tile-upload-btn {
+  width: 100%;
+  padding: 0.5rem;
+  font-family: inherit;
+  font-size: inherit;
+  color: var(--gui-text-label-color);
+  background: var(--gui-fg-color);
+  border: none;
+  border-radius: var(--gui-rounded-sm);
+  cursor: pointer;
+  transition: all 0.2s ease-out;
+}
+
+.tile-upload-btn:hover {
+  background-color: var(--gui-input-bg-color-hover);
+  box-shadow: inset 0 0 0 1px var(--gui-input-border-color-hover);
+}
+
+.tile-remove-btn {
+  margin-left: auto;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--gui-text-secondary-color);
+  background: transparent;
+  border: none;
+  border-radius: var(--gui-rounded-sm);
+  cursor: pointer;
+  transition: all 0.15s ease-out;
+}
+
+.tile-remove-btn:hover {
+  color: var(--gui-btn-color-hover);
+  background-color: var(--gui-input-bg-color-hover);
+}
+
 
 
 

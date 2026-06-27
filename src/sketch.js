@@ -13,6 +13,10 @@ window.params = {
   culling: 100,
   minSize : 4,
   bgColor : {r: 0, g: 0, b: 0, a: 0},
+  // tile images + border lines around each square
+  showImages: true,
+  showBorders: false,
+  borderColor: {r: 255, g: 255, b: 255, a: 1},
   // zoom and pan controls
   zoom: 1,
   // mainColor: {r: 255, g: 0, b: 0, a: 255},
@@ -56,10 +60,7 @@ function setup() {
 
 function draw() {
   window.params.fps = frameRate();
-  console.log('starting a draw loop')
   clear();
-  console.log(window.params.bgColor)
-  console.log(`p5COLOR: ${toP5Color(window.params.bgColor)}`)
   background(toP5Color(window.params.bgColor));
   
   if (!window.img) {
@@ -191,11 +192,14 @@ function getAverageColor(x, y, w, h) {
 }
 
 function drawNodes() {
-  print('drawing nodes')
   noStroke();
   const culling = window.params.culling;
 
-  for (let n of nodes) {
+  // sort once, loadedTiles doesn't change between nodes
+  const sortedTiles = [...loadedTiles].sort((a, b) => a.stop - b.stop)
+
+  // Draw the tile image for each cell
+  if (window.params.showImages) for (let n of nodes) {
     
     // Skip drawing empty nodes where image doesn't cover
     if (n.c.a < 10) {
@@ -209,7 +213,6 @@ function drawNodes() {
 
     // Convert bright to pct to compare against stops
     const brightPct = (bright / 255) * 100;
-    const sortedTiles = [...loadedTiles].sort((a, b) => a.stop - b.stop)
 
     // // Iterate through the tile list and pick the correct tile to render.
     let tileToUse = null;
@@ -229,25 +232,39 @@ function drawNodes() {
         image(tileToUse.img, n.x, n.y, n.w, n.h)
     }
   }
+
+  // Outline every cell on top of the tiles
+  if (window.params.showBorders) {
+    noFill();
+    stroke(toP5Color(window.params.borderColor));
+    strokeWeight(1);
+    for (let n of nodes) {
+      rect(n.x, n.y, n.w, n.h);
+    }
+  }
 }
 
 // Tile loading functions
 async function loadTiles () {
+  // wait for persisted custom tiles to be restored before reading activePack
+  if (window.tilesRestoreReady) await window.tilesRestoreReady;
+
   // First get active pack
   if (!window.activePack) return;
   const activePack = window.activePack;
 
-  // Then load each tile for p5js
+  // Then load each tile for p5js. resolve null on failure so one bad tile
+  // doesn't blank the whole render.
   const loadPromises = activePack.tiles.map((tile) => {
-    return new Promise((resolve, reject) => {
-      loadImage(tile.src, 
-        (img) => resolve({ img, stop: tile.stop, src: tile.src }), // callback for success. src is used as an identifier
-        (err) => reject(err)
+    return new Promise((resolve) => {
+      loadImage(tile.src,
+        (img) => resolve({ img, stop: tile.stop, src: tile.src }), // src is used as an identifier
+        () => resolve(null)
       )
     })
   })
   // Waits for images to load
-  loadedTiles = await Promise.all(loadPromises)
+  loadedTiles = (await Promise.all(loadPromises)).filter(Boolean)
 
   console.log(`Loaded ${loadedTiles.length} tiles from the pack`);
 
