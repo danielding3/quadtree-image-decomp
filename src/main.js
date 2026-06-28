@@ -4,6 +4,7 @@ import "./sketch.js";
 import "./gui.js";
 import {initTileSelector} from "./tileSelector.js"
 import {initZoomWidget} from "./zoomWidget.js"
+import './canvasInteractions.js'
 
 
 window.addEventListener('DOMContentLoaded', () => {

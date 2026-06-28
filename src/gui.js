@@ -20,9 +20,8 @@ function processNewImage(newImg) {
   // if (window.img.width > 800) {
   //   window.img.resize(800, 0);
   // }
-  resizeCanvas(window.img.width, window.img.height);
-
   window.img.loadPixels();
+  window.fitImageToViewport(); // auto-fit every new image (dropdown + upload) to the viewport
 
   window.needsUpdate = true;
   redraw();
@@ -127,17 +126,13 @@ function setupGUI() {
 }
 
 function saveImage() {
-  const savedZoom = window.params.zoom;
-  
-  window.params.zoom = 1;
-
-  
-  redraw(); // Redraw at original scale
-  saveCanvas('quadtree-decomposition', 'png');
-  
-  // Restore zoom/pan
-  window.params.zoom = savedZoom;
-  redraw();
+  // Export via an offscreen image-sized buffer — native res, independent of pan/zoom.
+  // Nodes are image-space, so they map 1:1 into the buffer with no transform.
+  const pg = createGraphics(window.img.width, window.img.height);
+  pg.clear();
+  window.drawNodes(pg);
+  saveCanvas(pg, 'quadtree-decomposition', 'png');
+  pg.remove();
 }
 
 // Attach functions to window for cross-module access

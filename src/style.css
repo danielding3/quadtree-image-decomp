@@ -31,6 +31,7 @@
   bottom: 0;
   min-width: 16rem;
   font-size: 11px;
+  z-index: 10; /* above the full-viewport canvas (z-index: 0) */
 }
 
 .tile-panel {
@@ -301,13 +302,11 @@ html, body {
   height:100%;
   margin: 0;
   padding: 0;
+  overflow: hidden; /* infinite canvas handles its own pan/zoom; no page scroll */
 }
 
 
 body {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   background-color: rgb(25,25,25);
   opacity: 0.8;
   background-image:  linear-gradient(rgb(40,40,40) 1px, transparent 1px), linear-gradient(to right, rgb(40,40,40) 1px, rgb(25,25,25) 1px);
@@ -317,14 +316,17 @@ body {
 
 canvas {
   background: black;
-  background: 
-  repeating-conic-gradient(#202020 0 25%, #303030 0 50%) 
+  background:
+  repeating-conic-gradient(#202020 0 25%, #303030 0 50%)
     50% / 20px 20px;
   /* background-size: 32px 32px; */
   /* background-position: 0 0, 16px 16px; */
   display: block;
-  border: 2px grey solid;
-  /* margin: auto; */
+  /* full-viewport infinite-canvas backdrop */
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 0;
 }
 
 
