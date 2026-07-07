@@ -365,7 +365,9 @@ body {
 }
 
 
-canvas {
+/* scope to the p5 sketch canvas only — a bare `canvas` selector also hits
+   Tweakpane's color-picker canvas and yanks it full-width to the top */
+canvas.p5Canvas {
   background: black;
   background:
   repeating-conic-gradient(#202020 0 25%, #303030 0 50%)
