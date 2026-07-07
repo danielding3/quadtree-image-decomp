@@ -1,7 +1,6 @@
 // Uses quadtree subdivision to decompose a given image
 let img1, img2, img3, img4; // Additional images for brightness-based rendering
 let nodes = []; // Stores the final squares/circles/triangles
-let buffer;
 // let tileImages = [] // contains src of tiles
 // let tileStops = [] // corresponding stop % for tiles
 let loadedTiles = []
@@ -19,6 +18,10 @@ window.params = {
   borderColor: {r: 255, g: 255, b: 255, a: 1},
   // zoom and pan controls
   zoom: 1,
+  panX: 0,
+  panY: 0,
+  minZoom: 0.1,
+  maxZoom: 5,
   // mainColor: {r: 255, g: 0, b: 0, a: 255},
   // imgThresh1 : 50,
   // imgThresh2 : 100,
@@ -37,18 +40,19 @@ function preload() {
 
 function setup() {
   print('loading setup')
-  createCanvas(800, 800);
+  const cnv = createCanvas(windowWidth, windowHeight);
+  window.attachCanvasInteractions(cnv.elt);
 
-  buffer = createGraphics(800,800)
   window.fileInput = createFileInput(window.handleFile);
   window.fileInput.hide(); // Trigger it via Tweakpane
-  
+
   loadImage('/pics/flower.png', (loadedImg) => {
     window.processNewImage(loadedImg);
     print('Image Dimensions: [', window.img.width, window.img.height, ']')
   });
-  
+
   window.img.loadPixels();
+  window.fitImageToViewport(); // fit the preloaded image so the first paint is centered
   window.setupGUI();
   
   loadTiles();
@@ -70,17 +74,18 @@ function draw() {
   // Only run the subdivision math if something changed
   if (window.needsUpdate) {
     nodes = []; // Clear old nodes
-    subdivide(0, 0, width, height);
+    // subdivide indexes img.pixels, so it works in image space, not canvas space
+    subdivide(0, 0, window.img.width, window.img.height);
     window.needsUpdate = false; // Reset flag, waiting for next change
   }
-  // Adjust for zoom
+  // Pan + zoom transform over image-space nodes (infinite-canvas model)
   push();
-  translate(width/2, height / 2);
+  translate(window.params.panX, window.params.panY);
   scale(window.params.zoom);
-  translate( -width / 2, -height / 2)
-  // Draw
-  drawNodes();
+  drawNodes(window);
   pop();
+
+  window.updateRecenterButton?.(); // fade the recenter button in/out for the new framing
 }
 
 function subdivide(x, y, w, h) {
@@ -191,8 +196,9 @@ function getAverageColor(x, y, w, h) {
   }
 }
 
-function drawNodes() {
-  noStroke();
+// Draws nodes to surface `g` (main canvas by default; a p5.Graphics for export)
+function drawNodes(g = window) {
+  g.noStroke();
   const culling = window.params.culling;
 
   // sort once, loadedTiles doesn't change between nodes
@@ -229,19 +235,84 @@ function drawNodes() {
       
     }
     if (tileToUse && tileToUse.img) {
-        image(tileToUse.img, n.x, n.y, n.w, n.h)
+        g.image(tileToUse.img, n.x, n.y, n.w, n.h)
     }
   }
 
   // Outline every cell on top of the tiles
   if (window.params.showBorders) {
-    noFill();
-    stroke(toP5Color(window.params.borderColor));
-    strokeWeight(1);
+    g.noFill();
+    g.stroke(toP5Color(window.params.borderColor));
+    g.strokeWeight(1);
     for (let n of nodes) {
-      rect(n.x, n.y, n.w, n.h);
+      g.rect(n.x, n.y, n.w, n.h);
     }
   }
+}
+
+// Auto-fit: scale the image to ~90% of the limiting viewport dimension and center it.
+function fitImageToViewport() {
+  const PADDING = 0.9;
+  const z = Math.min(width / window.img.width, height / window.img.height) * PADDING;
+  window.params.zoom = z;
+  window.params.minZoom = Math.min(0.1, z); // dynamic floor so huge images can fit
+  window.params.panX = (width  - window.img.width  * z) / 2;
+  window.params.panY = (height - window.img.height * z) / 2;
+  window.updateZoomDisplay?.(); // widget may not exist yet on first load
+}
+
+// Clamp pan to keep the image reachable (~one scaled image dim of overscroll each side)
+function clampPan() {
+  const sw = window.img.width  * window.params.zoom;
+  const sh = window.img.height * window.params.zoom;
+  const minX = Math.min(0, width  - sw) - sw, maxX = Math.max(0, width  - sw) + sw;
+  const minY = Math.min(0, height - sh) - sh, maxY = Math.max(0, height - sh) + sh;
+  window.params.panX = Math.min(maxX, Math.max(minX, window.params.panX));
+  window.params.panY = Math.min(maxY, Math.max(minY, window.params.panY));
+}
+
+// Fraction of the maximum-achievable image/viewport overlap that's currently on screen.
+// 1 when the artwork is well-framed, →0 as it drifts off-screen; scale/aspect invariant.
+function getImageVisibleRatio() {
+  const z = window.params.zoom;
+  const sw = window.img.width * z, sh = window.img.height * z;
+  const left = window.params.panX, top = window.params.panY;
+  const ix = Math.max(0, Math.min(left + sw, width)  - Math.max(left, 0));
+  const iy = Math.max(0, Math.min(top  + sh, height) - Math.max(top,  0));
+  const maxOverlap = Math.min(sw, width) * Math.min(sh, height);
+  return maxOverlap > 0 ? (ix * iy) / maxOverlap : 0;
+}
+
+// Smoothly pan the artwork back to centered over 300ms (zoom preserved).
+// Self-cancels if a pan/zoom moves the view mid-flight, so it never fights the user.
+let recenterRAF = null;
+function recenterImage() {
+  cancelRecenter();
+  const z = window.params.zoom;
+  const startX = window.params.panX, startY = window.params.panY;
+  const targetX = (width  - window.img.width  * z) / 2;
+  const targetY = (height - window.img.height * z) / 2;
+  if (startX === targetX && startY === targetY) return;
+
+  const DURATION = 300;
+  const easeInOut = (t) => (t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2);
+  let startTime = null, lastX = startX, lastY = startY;
+
+  const step = (now) => {
+    // Bail if something else moved the view since our last frame.
+    if (window.params.panX !== lastX || window.params.panY !== lastY) { recenterRAF = null; return; }
+    if (startTime === null) startTime = now;
+    const e = easeInOut(Math.min(1, (now - startTime) / DURATION));
+    window.params.panX = lastX = startX + (targetX - startX) * e;
+    window.params.panY = lastY = startY + (targetY - startY) * e;
+    redraw();
+    recenterRAF = (now - startTime < DURATION) ? requestAnimationFrame(step) : null;
+  };
+  recenterRAF = requestAnimationFrame(step);
+}
+
+function cancelRecenter() {
+  if (recenterRAF !== null) { cancelAnimationFrame(recenterRAF); recenterRAF = null; }
 }
 
 // Tile loading functions
@@ -295,8 +366,15 @@ window.setup = setup;
 window.draw = draw;
 window.updateTileStops = updateTileStops;
 window.loadTiles = loadTiles;
+// Refill the viewport on resize; clamp (don't re-fit) to preserve the current view.
+window.windowResized = () => { resizeCanvas(windowWidth, windowHeight); clampPan(); redraw(); };
 
 
 
 // Expose helper functions to window for gui.js
 window.toP5Color = toP5Color;
+window.drawNodes = drawNodes;
+window.fitImageToViewport = fitImageToViewport;
+window.clampPan = clampPan;
+window.getImageVisibleRatio = getImageVisibleRatio;
+window.recenterImage = recenterImage;

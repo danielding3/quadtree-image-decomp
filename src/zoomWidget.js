@@ -15,13 +15,13 @@ function initZoomWidget() {
 
   // Minus button click
   zoomMinus.addEventListener('click', () => {
-    const newZoom = Math.max(MIN_ZOOM, window.params.zoom - ZOOM_STEP);
+    const newZoom = Math.max(window.params.minZoom ?? MIN_ZOOM, window.params.zoom - ZOOM_STEP);
     setZoom(newZoom);
   });
 
   // Plus button click
   zoomPlus.addEventListener('click', () => {
-    const newZoom = Math.min(MAX_ZOOM, window.params.zoom + ZOOM_STEP);
+    const newZoom = Math.min(window.params.maxZoom ?? MAX_ZOOM, window.params.zoom + ZOOM_STEP);
     setZoom(newZoom);
   });
 
@@ -60,7 +60,9 @@ function initZoomWidget() {
     }
     
     // Clamp to min/max (in percentage terms)
-    value = Math.max(MIN_ZOOM * 100, Math.min(MAX_ZOOM * 100, value));
+    const minPct = (window.params.minZoom ?? MIN_ZOOM) * 100;
+    const maxPct = (window.params.maxZoom ?? MAX_ZOOM) * 100;
+    value = Math.max(minPct, Math.min(maxPct, value));
     
     // Convert back to decimal and set
     setZoom(value / 100);
@@ -70,9 +72,15 @@ function initZoomWidget() {
     zoomDisplay.classList.remove('hidden');
   }
 
-  // Set zoom and trigger update
-  function setZoom(value) {
-    window.params.zoom = value;
+  // Set zoom, anchored on the viewport center so centered artwork stays centered.
+  function setZoom(newZoom) {
+    const p = window.params, z0 = p.zoom;
+    const z1 = Math.min(p.maxZoom ?? MAX_ZOOM, Math.max(p.minZoom ?? MIN_ZOOM, newZoom));
+    const cx = width / 2, cy = height / 2;
+    p.panX = cx - ((cx - p.panX) / z0) * z1;
+    p.panY = cy - ((cy - p.panY) / z0) * z1;
+    p.zoom = z1;
+    window.clampPan?.();
     updateZoomDisplay();
     // zoom only affects the draw transform, no quadtree rebuild needed
     redraw();

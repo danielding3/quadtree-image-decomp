@@ -31,6 +31,7 @@
   bottom: 0;
   min-width: 16rem;
   font-size: 11px;
+  z-index: 10; /* above the full-viewport canvas (z-index: 0) */
 }
 
 .tile-panel {
@@ -295,19 +296,68 @@ input::-webkit-inner-spin-button {
 }
 
 /* ========================================
+   Recenter Button
+   ======================================== */
+.recenter-btn {
+  position: fixed;
+  bottom: 5rem;            /* clears the zoom widget below it */
+  left: 50%;
+  transform: translate(-50%, 0.5rem); /* sits low + faded; rises in when shown */
+  z-index: 100;
+
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  padding: 0.5rem 0.875rem;
+  font-family: inherit;
+  font-size: 0.875rem;
+  color: var(--gui-text-label-color);
+  background-color: var(--gui-bg-color);
+  border: none;
+  border-radius: 1rem;
+  cursor: pointer;
+
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+
+  opacity: 0;
+  pointer-events: none;    /* unclickable while faded out */
+  transition: opacity 0.25s ease, transform 0.25s ease,
+              color 0.15s ease-out, background-color 0.15s ease-out;
+}
+
+.recenter-btn.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+}
+
+.recenter-btn:hover {
+  color: var(--gui-btn-color-hover);
+  background-color: #3a3b42;
+}
+
+.recenter-btn:active {
+  color: var(--gui-btn-color-active);
+}
+
+.recenter-btn svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+/* ========================================
    Base Styles
    ======================================== */
 html, body {
   height:100%;
   margin: 0;
   padding: 0;
+  overflow: hidden; /* infinite canvas handles its own pan/zoom; no page scroll */
 }
 
 
 body {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   background-color: rgb(25,25,25);
   opacity: 0.8;
   background-image:  linear-gradient(rgb(40,40,40) 1px, transparent 1px), linear-gradient(to right, rgb(40,40,40) 1px, rgb(25,25,25) 1px);
@@ -315,16 +365,21 @@ body {
 }
 
 
-canvas {
+/* scope to the p5 sketch canvas only — a bare `canvas` selector also hits
+   Tweakpane's color-picker canvas and yanks it full-width to the top */
+canvas.p5Canvas {
   background: black;
-  background: 
-  repeating-conic-gradient(#202020 0 25%, #303030 0 50%) 
+  background:
+  repeating-conic-gradient(#202020 0 25%, #303030 0 50%)
     50% / 20px 20px;
   /* background-size: 32px 32px; */
   /* background-position: 0 0, 16px 16px; */
   display: block;
-  border: 2px grey solid;
-  /* margin: auto; */
+  /* full-viewport infinite-canvas backdrop */
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 0;
 }
 
 
