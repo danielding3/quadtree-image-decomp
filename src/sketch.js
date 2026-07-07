@@ -84,6 +84,8 @@ function draw() {
   scale(window.params.zoom);
   drawNodes(window);
   pop();
+
+  window.updateRecenterButton?.(); // fade the recenter button in/out for the new framing
 }
 
 function subdivide(x, y, w, h) {
@@ -269,6 +271,50 @@ function clampPan() {
   window.params.panY = Math.min(maxY, Math.max(minY, window.params.panY));
 }
 
+// Fraction of the maximum-achievable image/viewport overlap that's currently on screen.
+// 1 when the artwork is well-framed, →0 as it drifts off-screen; scale/aspect invariant.
+function getImageVisibleRatio() {
+  const z = window.params.zoom;
+  const sw = window.img.width * z, sh = window.img.height * z;
+  const left = window.params.panX, top = window.params.panY;
+  const ix = Math.max(0, Math.min(left + sw, width)  - Math.max(left, 0));
+  const iy = Math.max(0, Math.min(top  + sh, height) - Math.max(top,  0));
+  const maxOverlap = Math.min(sw, width) * Math.min(sh, height);
+  return maxOverlap > 0 ? (ix * iy) / maxOverlap : 0;
+}
+
+// Smoothly pan the artwork back to centered over 300ms (zoom preserved).
+// Self-cancels if a pan/zoom moves the view mid-flight, so it never fights the user.
+let recenterRAF = null;
+function recenterImage() {
+  cancelRecenter();
+  const z = window.params.zoom;
+  const startX = window.params.panX, startY = window.params.panY;
+  const targetX = (width  - window.img.width  * z) / 2;
+  const targetY = (height - window.img.height * z) / 2;
+  if (startX === targetX && startY === targetY) return;
+
+  const DURATION = 300;
+  const easeInOut = (t) => (t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2);
+  let startTime = null, lastX = startX, lastY = startY;
+
+  const step = (now) => {
+    // Bail if something else moved the view since our last frame.
+    if (window.params.panX !== lastX || window.params.panY !== lastY) { recenterRAF = null; return; }
+    if (startTime === null) startTime = now;
+    const e = easeInOut(Math.min(1, (now - startTime) / DURATION));
+    window.params.panX = lastX = startX + (targetX - startX) * e;
+    window.params.panY = lastY = startY + (targetY - startY) * e;
+    redraw();
+    recenterRAF = (now - startTime < DURATION) ? requestAnimationFrame(step) : null;
+  };
+  recenterRAF = requestAnimationFrame(step);
+}
+
+function cancelRecenter() {
+  if (recenterRAF !== null) { cancelAnimationFrame(recenterRAF); recenterRAF = null; }
+}
+
 // Tile loading functions
 async function loadTiles () {
   // wait for persisted custom tiles to be restored before reading activePack
@@ -330,3 +376,5 @@ window.toP5Color = toP5Color;
 window.drawNodes = drawNodes;
 window.fitImageToViewport = fitImageToViewport;
 window.clampPan = clampPan;
+window.getImageVisibleRatio = getImageVisibleRatio;
+window.recenterImage = recenterImage;

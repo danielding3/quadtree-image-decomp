@@ -296,6 +296,57 @@ input::-webkit-inner-spin-button {
 }
 
 /* ========================================
+   Recenter Button
+   ======================================== */
+.recenter-btn {
+  position: fixed;
+  bottom: 5rem;            /* clears the zoom widget below it */
+  left: 50%;
+  transform: translate(-50%, 0.5rem); /* sits low + faded; rises in when shown */
+  z-index: 100;
+
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  padding: 0.5rem 0.875rem;
+  font-family: inherit;
+  font-size: 0.875rem;
+  color: var(--gui-text-label-color);
+  background-color: var(--gui-bg-color);
+  border: none;
+  border-radius: 1rem;
+  cursor: pointer;
+
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+
+  opacity: 0;
+  pointer-events: none;    /* unclickable while faded out */
+  transition: opacity 0.25s ease, transform 0.25s ease,
+              color 0.15s ease-out, background-color 0.15s ease-out;
+}
+
+.recenter-btn.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+}
+
+.recenter-btn:hover {
+  color: var(--gui-btn-color-hover);
+  background-color: #3a3b42;
+}
+
+.recenter-btn:active {
+  color: var(--gui-btn-color-active);
+}
+
+.recenter-btn svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+/* ========================================
    Base Styles
    ======================================== */
 html, body {
