@@ -58,7 +58,8 @@ function attachCanvasInteractions(elt) {
       // ctrl/cmd + wheel, and trackpad pinch (reported as ctrl+wheel)
       zoomAtPoint(e.offsetX, e.offsetY, Math.exp(-e.deltaY * 0.01));
     } else if (e.shiftKey) {
-      p.panX -= e.deltaY;          // shift + wheel → horizontal pan (mouse users)
+      // shift + wheel → horizontal pan. Chrome puts the delta in deltaX, Firefox in deltaY.
+      p.panX -= e.deltaX || e.deltaY;
     } else {
       p.panX -= e.deltaX;          // trackpad two-finger / plain wheel
       p.panY -= e.deltaY;
