@@ -12,7 +12,10 @@
     "vite": "^7.2.4"
   },
   "dependencies": {
+    "fflate": "^0.8.3",
+    "mp4-muxer": "^5.2.2",
     "p5": "1.11.11",
-    "tweakpane": "^4.0.5"
+    "tweakpane": "^4.0.5",
+    "webm-muxer": "^5.1.4"
   }
 }

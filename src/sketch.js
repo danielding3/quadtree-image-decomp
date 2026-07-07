@@ -31,7 +31,6 @@ window.params = {
 
 window.needsUpdate = true;
 window.img = null;
-window.fileInput = null;
 
 
 function preload() {
@@ -42,9 +41,6 @@ function setup() {
   print('loading setup')
   const cnv = createCanvas(windowWidth, windowHeight);
   window.attachCanvasInteractions(cnv.elt);
-
-  window.fileInput = createFileInput(window.handleFile);
-  window.fileInput.hide(); // Trigger it via Tweakpane
 
   loadImage('/pics/flower.png', (loadedImg) => {
     window.processNewImage(loadedImg);
@@ -64,19 +60,22 @@ function setup() {
 
 function draw() {
   window.params.fps = frameRate();
+
+  if (window.video?.active) window.video.tick(); // trim-loop + grab new frames
+  // During playback the loop runs at 60fps; skip repaints until a new video
+  // frame or a view change arrives (canvas persists between draws)
+  if (window.video?.playing && !window.needsUpdate && !viewChanged()) return;
+
   clear();
   background(toP5Color(window.params.bgColor));
-  
+
   if (!window.img) {
     print('waiting for image to upload')
     return;
   }
   // Only run the subdivision math if something changed
   if (window.needsUpdate) {
-    nodes = []; // Clear old nodes
-    // subdivide indexes img.pixels, so it works in image space, not canvas space
-    subdivide(0, 0, window.img.width, window.img.height);
-    window.needsUpdate = false; // Reset flag, waiting for next change
+    rebuildNodes();
   }
   // Pan + zoom transform over image-space nodes (infinite-canvas model)
   push();
@@ -86,6 +85,22 @@ function draw() {
   pop();
 
   window.updateRecenterButton?.(); // fade the recenter button in/out for the new framing
+}
+
+// subdivide indexes img.pixels, so it works in image space, not canvas space
+function rebuildNodes() {
+  nodes = []; // Clear old nodes
+  subdivide(0, 0, window.img.width, window.img.height);
+  window.needsUpdate = false; // Reset flag, waiting for next change
+}
+
+let lastView = '';
+function viewChanged() {
+  const p = window.params;
+  const key = `${p.panX}|${p.panY}|${p.zoom}`;
+  if (key === lastView) return false;
+  lastView = key;
+  return true;
 }
 
 function subdivide(x, y, w, h) {
@@ -374,6 +389,7 @@ window.windowResized = () => { resizeCanvas(windowWidth, windowHeight); clampPan
 // Expose helper functions to window for gui.js
 window.toP5Color = toP5Color;
 window.drawNodes = drawNodes;
+window.rebuildNodes = rebuildNodes;
 window.fitImageToViewport = fitImageToViewport;
 window.clampPan = clampPan;
 window.getImageVisibleRatio = getImageVisibleRatio;

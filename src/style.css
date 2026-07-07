@@ -347,6 +347,174 @@ input::-webkit-inner-spin-button {
 }
 
 /* ========================================
+   Video Transport Bar
+   ======================================== */
+.transport-bar {
+  position: fixed;
+  bottom: 5rem;            /* sits above the zoom widget */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+
+  display: none;           /* video mode only */
+  align-items: center;
+  gap: 0.75rem;
+
+  width: clamp(16rem, calc(100vw - 38rem), 40rem); /* stays clear of the side panels */
+  padding: 0.5rem 0.75rem;
+  background-color: var(--gui-bg-color);
+  border-radius: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+body.video-mode .transport-bar { display: flex; }
+body.video-mode .recenter-btn { bottom: 8.5rem; } /* clears the transport bar */
+
+.transport-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  width: 2rem;
+  height: 2rem;
+
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+
+  color: var(--gui-text-label-color);
+  background-color: var(--gui-fg-color);
+  transition: all 0.15s ease-out;
+}
+
+.transport-btn:hover {
+  color: var(--gui-btn-color-hover);
+  background-color: #3a3b42;
+}
+
+.transport-btn:active {
+  color: var(--gui-btn-color-active);
+  transform: scale(0.95);
+}
+
+.transport-time {
+  flex-shrink: 0;
+  min-width: 3.25rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  color: var(--gui-text-label-color);
+}
+
+.transport-timeline {
+  position: relative;
+  flex: 1;
+  height: 1.5rem;
+  cursor: pointer;
+  touch-action: none;
+}
+
+/* track */
+.transport-timeline::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 0.375rem;
+  border-radius: 999px;
+  background: var(--gui-fg-color);
+}
+
+/* active (in..out) region */
+.trim-window {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 0.375rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.25);
+  pointer-events: none;
+}
+
+.trim-handle {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 0.5rem;
+  height: 1.25rem;
+  border-radius: 0.25rem;
+  background: var(--gui-btn-color);
+  cursor: ew-resize;
+  z-index: 2;
+}
+
+.trim-handle:hover,
+.trim-handle.handle-active {
+  background: white;
+}
+
+.transport-playhead {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 0.875rem;
+  height: 0.875rem;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* ========================================
+   Video Export Overlay
+   ======================================== */
+.export-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.export-dialog {
+  min-width: 20rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  font-size: 0.8125rem;
+  color: var(--gui-text-heading-color);
+  background: var(--gui-bg-color);
+  border-radius: var(--gui-rounded-md);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.export-progress {
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--gui-fg-color);
+  overflow: hidden;
+}
+
+#export-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--gui-btn-color-active);
+  transition: width 0.1s linear;
+}
+
+.export-status {
+  color: var(--gui-text-label-color);
+  min-height: 1em;
+}
+
+/* ========================================
    Base Styles
    ======================================== */
 html, body {

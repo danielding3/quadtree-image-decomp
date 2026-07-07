@@ -41,6 +41,42 @@
       <span>Center</span>
     </button>
 
+    <!-- Video transport: play/pause, scrub + trim window; visible in video mode only -->
+    <div id="transport-bar" class="transport-bar roboto-mono-normal">
+      <button id="transport-play" class="transport-btn" aria-label="Play / pause">
+        <svg id="transport-icon-play" width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 2.5v11l9-5.5z" fill="currentColor"/>
+        </svg>
+        <svg id="transport-icon-pause" class="hidden" width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+          <rect x="3.5" y="2.5" width="3" height="11" rx="1" fill="currentColor"/>
+          <rect x="9.5" y="2.5" width="3" height="11" rx="1" fill="currentColor"/>
+        </svg>
+      </button>
+      <span id="transport-time" class="transport-time">0:00.0</span>
+      <div id="transport-timeline" class="transport-timeline">
+        <div id="trim-window" class="trim-window"></div>
+        <div id="trim-in" class="trim-handle"></div>
+        <div id="trim-out" class="trim-handle"></div>
+        <div id="transport-playhead" class="transport-playhead"></div>
+      </div>
+      <span id="transport-clip-len" class="transport-time">0:30.0</span>
+      <button id="transport-eject" class="transport-btn" aria-label="Close video">
+        <svg width="14" height="14" viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Video export progress overlay -->
+    <div id="export-overlay" class="export-overlay hidden roboto-mono-normal">
+      <div class="export-dialog">
+        <div id="export-title" class="export-title">Exporting…</div>
+        <div class="export-progress"><div id="export-progress-fill"></div></div>
+        <div id="export-status" class="export-status"></div>
+        <button id="export-cancel" class="tile-upload-btn">Cancel</button>
+      </div>
+    </div>
+
     <div class="tile-panel-wrapper roboto-mono-normal">
       <div class="tile-panel">
         Tile Panel

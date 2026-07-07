@@ -1,21 +1,23 @@
 import {Pane} from 'tweakpane';
 import {basePics} from './basePics.js';
 
-function handleFile(file) {
-  if (file.type === 'image') {
+function handleUploadedFile(f) {
+  if (f.type.startsWith('image/')) {
     console.log('New Image Uploaded')
-
-    // convert to p5 image from html image
-    loadImage(file.data, (loadedImg) => {
-    processNewImage(loadedImg);
-    // clear(); // change image, then clear canvas to wipe previous img
-  });
+    const url = URL.createObjectURL(f);
+    loadImage(url,
+      (loadedImg) => { URL.revokeObjectURL(url); processNewImage(loadedImg); },
+      () => { URL.revokeObjectURL(url); console.log('Failed to load image'); });
+  } else if (f.type.startsWith('video/')) {
+    console.log('New Video Uploaded')
+    window.video.enter(f);
   } else {
-    console.log('Not an image file!');
+    console.log('Not an image or video file!');
   }
 }
 
 function processNewImage(newImg) {
+  window.video?.exit(); // loading an image always leaves video mode
   window.img = newImg;
   // if (window.img.width > 800) {
   //   window.img.resize(800, 0);
@@ -74,13 +76,25 @@ function setupGUI() {
 
   pane.addBlade({ view: "separator" });
 
-  // Image upload
-  const btn = pane.addButton({title: 'Upload Custom Image'});
+  // Hidden native file input — plain input instead of p5 createFileInput,
+  // which eagerly base64s the whole file (too heavy for videos)
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'image/*,video/*';
+  fileInput.style.display = 'none';
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) handleUploadedFile(fileInput.files[0]);
+    fileInput.value = ''; // allow re-selecting the same file
+  });
+  document.body.appendChild(fileInput);
+
+  // Image / video upload
+  const btn = pane.addButton({title: 'Upload Image / Video'});
 
   btn.on('click', () => {
-    window.fileInput.elt.click(); // click on the actual HTMl element
+    fileInput.click(); // click on the actual HTMl element
   })
-  
+
   const f2 = pane.addFolder({
     title: 'Settings',
   });
@@ -116,9 +130,42 @@ function setupGUI() {
   });
   borderColorBinding.on('change', requestRedraw);
   f2.addBlade({ view: "separator" });
-  
 
-  // Image export
+
+  // Video controls + export — folder only shows in video mode
+  window.params.videoExport = { detail: 640, format: 'mp4', fps: 30, res: 1920 };
+  const vf = pane.addFolder({ title: 'Video' });
+  vf.hidden = true;
+
+  // processing resolution: speed vs decomposition granularity
+  const detailBinding = vf.addBinding(window.params.videoExport, 'detail', {
+    label: 'Detail',
+    options: { 'Low': 480, 'Medium': 640, 'High': 960 },
+  });
+  detailBinding.on('change', (ev) => window.video.setDetail(ev.value));
+
+  vf.addBlade({ view: "separator" });
+  vf.addBinding(window.params.videoExport, 'format', {
+    label: 'Format',
+    options: { 'MP4': 'mp4', 'WebM': 'webm', 'PNG Frames (zip)': 'png' },
+  });
+  vf.addBinding(window.params.videoExport, 'fps', {
+    label: 'FPS',
+    options: { '10': 10, '15': 15, '24': 24, '30': 30, '60': 60 },
+  });
+  vf.addBinding(window.params.videoExport, 'res', {
+    label: 'Size',
+    options: { 'Native': 0, '1080p': 1920, '720p': 1280, '480p': 854 },
+  });
+  const btnVideoExport = vf.addButton({ title: 'Export Video' });
+  btnVideoExport.on('click', () => window.exportVideo?.());
+
+  window.setVideoUIVisible = (on) => {
+    vf.hidden = !on;
+    document.body.classList.toggle('video-mode', on); // shows/hides the transport bar
+  };
+
+  // Image export (current frame in video mode)
   const btnExport = pane.addButton({title: 'Export as PNG'});
   btnExport.on('click', () => {
     saveImage(); // click on the actual HTMl element
@@ -128,8 +175,11 @@ function setupGUI() {
 function saveImage() {
   // Export via an offscreen image-sized buffer — native res, independent of pan/zoom.
   // Nodes are image-space, so they map 1:1 into the buffer with no transform.
-  const pg = createGraphics(window.img.width, window.img.height);
+  // Video frames process at reduced resolution; scale back up to native.
+  const s = window.video?.active ? window.video.nativeW / window.img.width : 1;
+  const pg = createGraphics(Math.round(window.img.width * s), Math.round(window.img.height * s));
   pg.clear();
+  pg.scale(s);
   window.drawNodes(pg);
   saveCanvas(pg, 'quadtree-decomposition', 'png');
   pg.remove();
@@ -138,5 +188,4 @@ function saveImage() {
 // Attach functions to window for cross-module access
 window.setupGUI = setupGUI;
 window.processNewImage = processNewImage;
-window.handleFile = handleFile;
 window.darken = darken;
